@@ -45,7 +45,7 @@ def procvid(app):
 
                 #pygame.draw.circle(app._display_surf, green, (int(shotx),int(shoty)), app.plateradius, 5)
                 #the star has a built-in hit checker. def checkHit(xp, yp,spread,height=500,width=500):
-                app.lastshottime,targhit = app.star.checkHit_delayed(shotxs,shotys,2,app.t1buf[0],app.t2buf[0],app.height,app.width)
+                app.lastshottime,targhit,j1,j2 = app.star.checkHit_delayed(shotxs,shotys,2,app.t1buf[0],app.t2buf[0],app.height,app.width)
                 #print app.lastshottime,targhit
                 if ((meanx*app.scalex-app.resetx)**2+(meany*app.scaley-app.resety)**2)<=app.plateradius**2:
                     app.star.reset(t2=0.5)
