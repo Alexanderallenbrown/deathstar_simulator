@@ -102,6 +102,10 @@ class App:
         print self.plateradius
         self.resetx = 50
         self.resety = 450
+        #activator popper
+        self.actx = 100
+        self.acty = 240
+        self.actplateradius = self.plateradius
 
         
 
@@ -228,6 +232,10 @@ class App:
             pass
             #pygame.draw.circle(self._display_surf, green, (int(self.shotx),int(self.shoty)), self.plateradius, 5)
 
+        #draw the activator popper
+        pygame.draw_circle(self._display_surf, grey, (self.actx,self.acty), self.actplateradius, 0)
+        pygame.draw_rect(screen, grey, (100,240,self.actplateradius*0.8,self.actplateradius*3), 0)
+        
         pygame.draw.circle(self._display_surf, grey, (self.resetx,self.resety), self.plateradius, 0)
         #now draw text for reset and time
         textreset = myfont.render('RESET',False,grey)
