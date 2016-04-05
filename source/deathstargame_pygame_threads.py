@@ -236,7 +236,7 @@ class App:
         pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty), self.actplateradius, 0)
         pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty,self.actplateradius,self.actplateradius*3.0), 0)
         pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty-self.actplateradius,self.actplateradius*1.5,self.actplateradius*3.0), 0)
-        pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-self.actplateradius), self.actplateradius/2.0, 0)
+        pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-self.actplateradius), int(self.actplateradius/2.0), 0)
         
         
         pygame.draw.circle(self._display_surf, grey, (self.resetx,self.resety), self.plateradius, 0)
