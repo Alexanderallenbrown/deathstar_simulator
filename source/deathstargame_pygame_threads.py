@@ -236,7 +236,7 @@ class App:
         
         #check to see if activator is hit/down
         if self.activator_hit is 1 and self.activator_down is 0:
-            if (timenow-self.activator_hittime)>=self.activatordelay:
+            if (timenow-self.activator_hittime)>=self.activator_delay:
                 self.activator_down = 1
                 self.star.simulate=True
                 self.star.setstarttime()
