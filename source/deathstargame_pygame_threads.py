@@ -222,6 +222,7 @@ class App:
                 #self.star.simulate=True
                 #self.star.setstarttime()
                 self.activator_hit = 1
+                self.activator_hittime=time.time()
                 #print "activator!!"
                 
 
