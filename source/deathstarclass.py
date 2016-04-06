@@ -240,8 +240,9 @@ class DeathStar:
         if (d4sq<=spread*spread*2*self.radius*self.radius):
             if(self.m4>self.shotweight):
                 self.m4=self.shotweight
-                self.simulate=True
-                self.starttime=time.time()
+                if self.simulate is not True:
+                    self.simulate=True
+                    self.setstarttime()
                 targhit = 4
 
         if (d5sq<=spread*spread*self.radius*self.radius):
@@ -250,7 +251,8 @@ class DeathStar:
                 targhit = 5
         return self.simtime,targhit,targtried,mindist
        # print d1sq,d2sq,d2sq,d4sq,d5sq
-
+    def setstarttime(self):
+        self.starttime=time.time()
     def reset(self,t1=0,t2=0):
         self.simulate=False
         self.t1=t1
