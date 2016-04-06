@@ -216,6 +216,9 @@ class App:
             
             if ((pos[0]-self.actx)**2+(pos[1]-self.acty)**2)<=self.actplateradius**2:
                 self.star.simulate==True
+                self.star.starttime=time.time()
+                self.activator_hit = 1
+                print "activator!!"
                 
 
          #see if we quit.   
@@ -245,9 +248,10 @@ class App:
             #pygame.draw.circle(self._display_surf, green, (int(self.shotx),int(self.shoty)), self.plateradius, 5)
 
         #draw the activator popper
-        pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty), self.actplateradius, 0)
-        pygame.draw.rect(self._display_surf, grey, (self.actx-int(self.actplateradius/2),self.acty-2*self.actplateradius,self.actplateradius,self.actplateradius*5.0), 0)
-        pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-2*self.actplateradius), int(self.actplateradius/2.), 0)
+        if self.activator_hit is not 1:
+            pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty), self.actplateradius, 0)
+            pygame.draw.rect(self._display_surf, grey, (self.actx-int(self.actplateradius/2),self.acty-2*self.actplateradius,self.actplateradius,self.actplateradius*5.0), 0)
+            pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-2*self.actplateradius), int(self.actplateradius/2.), 0)
         #pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty,self.actplateradius,self.actplateradius*3.0), 0)
         #pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty-self.actplateradius,self.actplateradius*1.5,self.actplateradius*3.0), 0)
         #pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-self.actplateradius), int(self.actplateradius/2.0), 0)
