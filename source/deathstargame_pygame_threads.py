@@ -53,8 +53,9 @@ def procvid(app):
                 
                 if ((meanx*app.scalex-app.actx)**2+(meany*app.scaley-app.acty)**2)<=app.actplateradius**2:
                     app.activator_hit=1#set the activator hit to zero
-                    app.star.simulate=True
-                    app.star.setstarttime()
+                    app.activator_hittime = time.time()
+                    #app.star.simulate=True
+                    #app.star.setstarttime()
         else:
             if app.oldlasershot == True:
                 app.lasershotnow=False
@@ -114,6 +115,8 @@ class App:
         self.actplateradius = self.plateradius
         self.activator_hit = 0
         self.activator_delay = 0.2#in seconds, how long before we release the star after activator is hit.
+        self.activator_down = 0#this only goes true after the delay has passed
+        self.activator_hittime = 0
 
         
 
@@ -216,10 +219,10 @@ class App:
                 self.activator_hit = 0
             
             if ((pos[0]-self.actx)**2+(pos[1]-self.acty)**2)<=self.actplateradius**2:
-                self.star.simulate=True
-                self.star.setstarttime()
+                #self.star.simulate=True
+                #self.star.setstarttime()
                 self.activator_hit = 1
-                print "activator!!"
+                #print "activator!!"
                 
 
          #see if we quit.   
@@ -230,6 +233,14 @@ class App:
         timenow = time.time()
         self.dt = timenow-self.oldtime
         self.oldtime = timenow
+        
+        #check to see if activator is hit/down
+        if self.activator_hit is 1 and self.activator_down is 0:
+            if (timenow-self.activator_hittime)>=self.activatordelay:
+                self.activator_down = 1
+                self.star.simulate=True
+                self.star.setstarttime()
+        
         #print self.dt
         #set the current time step
         self.star.dt = self.dt
