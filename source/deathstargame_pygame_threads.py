@@ -49,6 +49,11 @@ def procvid(app):
                 #print app.lastshottime,targhit
                 if ((meanx*app.scalex-app.resetx)**2+(meany*app.scaley-app.resety)**2)<=app.plateradius**2:
                     app.star.reset(t2=0.5)
+                    app.activator_hit=0#reset the activator
+                
+                if ((meanx*app.scalex-app.actx)**2+(meany*app.scaley-app.acty)**2)<=app.actplateradius**2:
+                    app.activator_hit=1#set the activator hit to zero
+                    app.star.simulate==True
         else:
             if app.oldlasershot == True:
                 app.lasershotnow=False
@@ -103,9 +108,11 @@ class App:
         self.resetx = 50
         self.resety = 450
         #activator popper
-        self.actx = 100
-        self.acty = 240
+        self.actx = 50
+        self.acty = 240+100
         self.actplateradius = self.plateradius
+        self.activator_hit = 0
+        self.activator_delay = 0.2#in seconds, how long before we release the star after activator is hit.
 
         
 
