@@ -53,7 +53,8 @@ def procvid(app):
                 
                 if ((meanx*app.scalex-app.actx)**2+(meany*app.scaley-app.acty)**2)<=app.actplateradius**2:
                     app.activator_hit=1#set the activator hit to zero
-                    app.star.simulate==True
+                    app.star.simulate=True
+                    app.star.setstarttime()
         else:
             if app.oldlasershot == True:
                 app.lasershotnow=False
@@ -215,8 +216,8 @@ class App:
                 self.activator_hit = 0
             
             if ((pos[0]-self.actx)**2+(pos[1]-self.acty)**2)<=self.actplateradius**2:
-                self.star.simulate==True
-                self.star.starttime=time.time()
+                self.star.simulate=True
+                self.star.setstarttime()
                 self.activator_hit = 1
                 print "activator!!"
                 
