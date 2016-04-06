@@ -212,6 +212,11 @@ class App:
             self.lastshottime,targhit = self.star.checkHit(shotx,shoty,1,self.height,self.width)
             if ((pos[0]-self.resetx)**2+(pos[1]-self.resety)**2)<=self.plateradius**2:
                 self.star.reset(t2=0.5)
+                self.activator_hit = 0
+            
+            if ((pos[0]-self.actx)**2+(pos[1]-self.acty)**2)<=self.actplateradius**2:
+                self.star.simulate==True
+                
 
          #see if we quit.   
         if event.type == pygame.QUIT:
