@@ -264,7 +264,7 @@ class App:
         #draw the activator popper
         if self.activator_hit is not 1:
             pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty), self.actplateradius, 0)
-            pygame.draw.rect(self._display_surf, grey, (self.actx-int(self.actplateradius/2),self.acty-2*self.actplateradius,self.actplateradius,self.actplateradius*5.0), 0)
+            pygame.draw.rect(self._display_surf, grey, (self.actx-int(self.actplateradius/2),self.acty-2*self.actplateradius,self.actplateradius,self.actplateradius*6.0), 0)
             pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-2*self.actplateradius), int(self.actplateradius/2.), 0)
         #pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty,self.actplateradius,self.actplateradius*3.0), 0)
         #pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty-self.actplateradius,self.actplateradius*1.5,self.actplateradius*3.0), 0)
