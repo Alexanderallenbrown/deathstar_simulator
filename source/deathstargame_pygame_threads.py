@@ -7,6 +7,7 @@ import cv2
 import time
 import thread
 
+#hi. this is a comment.
 
 capture = cv2.VideoCapture(0)
 laserlocx,laserlocy = array([0]),array([0])
