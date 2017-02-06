@@ -47,6 +47,7 @@ class DeathStar:
 
         #star position
         self.xst = -self.l2*cos(self.t2)
+            #mass five
         self.yst = -self.l2*sin(self.t2)
         #mass one
         self.x1 = self.xst-self.l1*sin(self.t1)

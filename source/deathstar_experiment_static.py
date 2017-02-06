@@ -7,9 +7,49 @@ import cv2
 import time
 import thread
 
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEBase import MIMEBase
+from email.MIMEText import MIMEText
+from email import Encoders
+import os
+
+import datetime
+now = datetime.datetime.now()
+fname = 'Data/'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)+'_'+str(now.hour)+'_'+str(now.minute)+'_'+str(now.second)+'.txt'
+
+gmail_user = "deathstarsimulator@gmail.com"
+gmail_pwd = "3gunstar"
+
 
 capture = cv2.VideoCapture(0)
 laserlocx,laserlocy = array([0]),array([0])
+
+
+def mail(to, subject, text, attach):
+   msg = MIMEMultipart()
+
+   msg['From'] = gmail_user
+   msg['To'] = to
+   msg['Subject'] = subject
+
+   msg.attach(MIMEText(text))
+
+   part = MIMEBase('application', 'octet-stream')
+   part.set_payload(open(attach, 'rb').read())
+   Encoders.encode_base64(part)
+   part.add_header('Content-Disposition',
+           'attachment; filename="%s"' % os.path.basename(attach))
+   msg.attach(part)
+
+   mailServer = smtplib.SMTP("smtp.gmail.com", 587)
+   mailServer.ehlo()
+   mailServer.starttls()
+   mailServer.ehlo()
+   mailServer.login(gmail_user, gmail_pwd)
+   mailServer.sendmail(gmail_user, to, msg.as_string())
+   # Should be mailServer.quit(), but that crashes...
+   mailServer.close()
 
 
 def procvid(app):
@@ -42,16 +82,31 @@ def procvid(app):
 
                 shotxs= (app.shotx-app.width/2)/app.starscale
                 shotys = -(app.shoty-app.height/2)/app.starscale
+                #feed these coords to the app for storage in file.
+                app.shotx_starcoords,app.shoty_starcoords=shotxs,shotys
 
                 #pygame.draw.circle(app._display_surf, green, (int(shotx),int(shoty)), app.plateradius, 5)
                 #the star has a built-in hit checker. def checkHit(xp, yp,spread,height=500,width=500):
-                app.lastshottime,targhit,j1,j2 = app.star.checkHit_delayed(shotxs,shotys,1,app.t1buf[0],app.t2buf[0],app.height,app.width)
+                app.lastshottime,app.targhit,app.targtried,app.mindist = app.star.checkHit_delayed(shotxs,shotys,2,app.t1buf[0],app.t2buf[0],app.height,app.width)
                 #print app.lastshottime,targhit
-                if ((meanx*app.scalex-app.resetx)**2+(meany*app.scaley-app.resety)**2)<=app.plateradius**2:
+
+                if ((meanx*app.scalex-app.resetx)**2+(meany*app.scaley-app.resety)**2)<=2*app.plateradius**2:      
                     app.star.reset(t2=0.5)
-                    app.activator_hit=0#reset the activator
-                
-                if ((meanx*app.scalex-app.actx)**2+(meany*app.scaley-app.acty)**2)<=app.actplateradius**2:
+                    app.activator_hit = 0
+                    app.activator_down=0
+                    # try:
+                    #     mail("deathstarsimulator@gmail.com",
+                    #     app.fname,
+                    #     app.fname,
+                    #     app.fname)
+                    # except:
+                    #     pass
+                    app.f.close()
+                    now = datetime.datetime.now()
+                    app.fname = 'Data/'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)+'_'+str(now.hour)+'_'+str(now.minute)+'_'+str(now.second)+'.txt'
+                    app.f=open(app.fname,'wb')
+
+                if ((meanx*app.scalex-app.actx)**2+(meany*app.scaley-app.acty)**2)<=2*app.actplateradius**2:
                     app.activator_hit=1#set the activator hit to zero
                     app.activator_hittime = time.time()
                     #app.star.simulate=True
@@ -79,7 +134,13 @@ grey = (128,128,128)
  
 class App:
     def __init__(self):
-        self.lagtime = 0.2#lag of the video
+        now = datetime.datetime.now()
+        self.fname = '/home/deathstarsim/deathstar_simulator/source/Data/'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)+'_'+str(now.hour)+'_'+str(now.minute)+'_'+str(now.second)+'.txt'
+        self.f = open(self.fname,'wb')
+        self.f.write('time theta_1  t1d theta_2 t2d xst yst x1 y1 x2 y2 x3 y3 x4 y4 x5 y5 shot actual_shot_time targ_hit targ_tried min_distance\n')
+
+        self.lagtime = 0.25#lag of the video
+        self.staticmode = True
         #assume we run at 60 fps to start.
         #we will fill up these buffers for checking hits. Hits will be checked based on old angles.
         self.t1buf = zeros(int(60*self.lagtime)) 
@@ -99,7 +160,7 @@ class App:
         #self.background = pygame.image.load("rangebay.jpg")
         #self.bgrect = self.background.get_rect()
         
-        self.star = DeathStar(l1=0.89,l2=0.8,b1=5,b2=.01,dt=self.dt,platemass=7.5,t2=.5,shotweight=0.001,Jst=3.51,mst=28.08)
+        self.star = DeathStar(l1=0.89,l2=0.8,b1=1,b2=1,dt=self.dt,platemass=7.5,t2=.5,shotweight=0.001,Jst=3.51,mst=28.08)
         self.plateradius_meters = 5*.0254 #in meters, how large the plate diameter is.
         self.star.radius = self.plateradius_meters
         #we need to scale the star so that our height (480) gives us enough room at the bottom of the star.
@@ -109,6 +170,7 @@ class App:
         print self.plateradius
         self.resetx = 50
         self.resety = 450
+
         #activator popper
         self.actx = 50
         self.acty = 240+100
@@ -118,8 +180,6 @@ class App:
         self.activator_down = 0#this only goes true after the delay has passed
         self.activator_hittime = 0
 
-        
-
         self.oldlasershot = False
         self.currlasershot = False
         self.lasershotnow = False
@@ -127,6 +187,13 @@ class App:
         self.threshval = -16
         # self.oldlasershottime = time.time()
         # self.laserdelay = 0.1
+
+        #the following are set by the CV thread and keep track of shots 
+        self.shotx_starcoords = 0
+        self.shoty_starcoords = 0
+        self.targhit = 0
+        self.targtried = 0
+        self.mindist = 10000000
 
     def draw_star(self):
         
@@ -136,54 +203,54 @@ class App:
         hingex = self.width/2
         hingey = self.height/2
         #star position
-        xst = -self.star.l2*cos(-self.star.t2)*self.starscale+hingex
-        yst = -(self.star.l2*sin(-self.star.t2))*self.starscale+hingey
+        self.xst = -self.star.l2*cos(-self.star.t2)*self.starscale+hingex
+        self.yst = -(self.star.l2*sin(-self.star.t2))*self.starscale+hingey
         #mass one
-        x1 = xst+self.starscale*self.star.l1*sin(-self.star.t1)
-        y1 = yst - self.starscale*self.star.l1*cos(-self.star.t1)
+        self.x1 = self.xst+self.starscale*self.star.l1*sin(-self.star.t1)
+        self.y1 = self.yst - self.starscale*self.star.l1*cos(-self.star.t1)
         #mass two
-        x2 = xst+self.starscale*self.star.l1*sin(-self.star.t1-self.star.alpha)
-        y2 = yst - self.starscale*self.star.l1*cos(-self.star.t1-self.star.alpha)
+        self.x2 = self.xst+self.starscale*self.star.l1*sin(-self.star.t1-self.star.alpha)
+        self.y2 = self.yst - self.starscale*self.star.l1*cos(-self.star.t1-self.star.alpha)
         #mass three
-        x3 = xst+self.starscale*self.star.l1*sin(-self.star.t1-2*self.star.alpha)
-        y3 = yst - self.starscale*self.star.l1*cos(-self.star.t1-2*self.star.alpha)
+        self.x3 = self.xst+self.starscale*self.star.l1*sin(-self.star.t1-2*self.star.alpha)
+        self.y3 = self.yst - self.starscale*self.star.l1*cos(-self.star.t1-2*self.star.alpha)
         #mass four
-        x4 = xst+self.starscale*self.star.l1*sin(-self.star.t1-3*self.star.alpha)
-        y4 = yst - self.starscale*self.star.l1*cos(-self.star.t1-3*self.star.alpha)
+        self.x4 = self.xst+self.starscale*self.star.l1*sin(-self.star.t1-3*self.star.alpha)
+        self.y4 = self.yst - self.starscale*self.star.l1*cos(-self.star.t1-3*self.star.alpha)
         #mass five
-        x5 = xst+self.starscale*self.star.l1*sin(-self.star.t1-4*self.star.alpha)
-        y5 = yst - self.starscale*self.star.l1*cos(-self.star.t1-4*self.star.alpha)
+        self.x5 = self.xst+self.starscale*self.star.l1*sin(-self.star.t1-4*self.star.alpha)
+        self.y5 = self.yst - self.starscale*self.star.l1*cos(-self.star.t1-4*self.star.alpha)
 
-        pygame.draw.lines(self._display_surf, white, False, [(hingex,hingey), (xst,yst)], 3)
-        pygame.draw.lines(self._display_surf, grey, False, [(xst,yst), (x1,y1)], 3)
-        pygame.draw.lines(self._display_surf, grey, False, [(xst,yst), (x2,y2)], 3)
-        pygame.draw.lines(self._display_surf, grey, False, [(xst,yst), (x3,y3)], 3)
-        pygame.draw.lines(self._display_surf, red, False, [(xst,yst), (x4,y4)], 3)
-        pygame.draw.lines(self._display_surf, grey, False, [(xst,yst), (x5,y5)], 3)
+        pygame.draw.lines(self._display_surf, white, False, [(hingex,hingey), (self.xst,self.yst)], 3)
+        pygame.draw.lines(self._display_surf, grey, False, [(self.xst,self.yst), (self.x1,self.y1)], 3)
+        pygame.draw.lines(self._display_surf, grey, False, [(self.xst,self.yst), (self.x2,self.y2)], 3)
+        pygame.draw.lines(self._display_surf, grey, False, [(self.xst,self.yst), (self.x3,self.y3)], 3)
+        pygame.draw.lines(self._display_surf, red, False, [(self.xst,self.yst), (self.x4,self.y4)], 3)
+        pygame.draw.lines(self._display_surf, grey, False, [(self.xst,self.yst), (self.x5,self.y5)], 3)
 
 
 
 
         #mass one ellipse
         if (self.star.m1>self.star.shotweight):
-            pygame.draw.circle(self._display_surf, grey, (int(x1),int(y1)), self.plateradius, 0)
+            pygame.draw.circle(self._display_surf, grey, (int(self.x1),int(self.y1)), self.plateradius, 0)
 
         #mass 2 ellipse
         if (self.star.m2>self.star.shotweight):
-            pygame.draw.circle(self._display_surf, grey, (int(x2),int(y2)), self.plateradius, 0)
+            pygame.draw.circle(self._display_surf, grey, (int(self.x2),int(self.y2)), self.plateradius, 0)
 
         #mass 3 ellipse
         if (self.star.m3>self.star.shotweight):
-            pygame.draw.circle(self._display_surf, grey, (int(x3),int(y3)), self.plateradius, 0)
+            pygame.draw.circle(self._display_surf, grey, (int(self.x3),int(self.y3)), self.plateradius, 0)
 
         
         #mass 4ellipse
         if (self.star.m4>self.star.shotweight):
-            pygame.draw.circle(self._display_surf, red, (int(x4),int(y4)), self.plateradius, 0)
+            pygame.draw.circle(self._display_surf, red, (int(self.x4),int(self.y4)), self.plateradius, 0)
 
         #mass one ellipse
         if (self.star.m5>self.star.shotweight):
-            pygame.draw.circle(self._display_surf, grey, (int(x5),int(y5)), self.plateradius, 0)
+            pygame.draw.circle(self._display_surf, grey, (int(self.x5),int(self.y5)), self.plateradius, 0)
  
     def on_init(self):
         pygame.init()
@@ -203,6 +270,11 @@ class App:
             self.threshval+=1
         if (event.type is KEYDOWN and event.key==K_k):
             self.threshval-=1
+        if (event.type is KEYDOWN and event.key==K_s): #PRESSING THE S KEY TOGGLES STATIC MODE
+            if self.staticmode == True:
+                self.staticmode=False
+            else:
+                self.staticmode = True
         #let's look for hits based on mouse clicks!!
         if event.type == pygame.MOUSEBUTTONDOWN:
             #get the mouse position
@@ -211,21 +283,25 @@ class App:
             #pull out the "world" coordinates of the shot
             shotx = (pos[0]-self.width/2)/self.starscale
             shoty = -(pos[1]-self.height/2)/self.starscale
-
+            self.shotx,self.shoty = shotx,shoty
             #the star has a built-in hit checker. def checkHit(xp, yp,spread,height=500,width=500):
             self.lastshottime,targhit = self.star.checkHit(shotx,shoty,1,self.height,self.width)
             if ((pos[0]-self.resetx)**2+(pos[1]-self.resety)**2)<=self.plateradius**2:
                 self.star.reset(t2=0.5)
                 self.activator_hit = 0
                 self.activator_down=0
-            
+                self.f.close()
+                now = datetime.datetime.now()
+                self.fname = 'Data/'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)+'_'+str(now.hour)+'_'+str(now.minute)+'_'+str(now.second)+'.txt'
+                self.f=open(self.fname,'wb')
+
+
             if ((pos[0]-self.actx)**2+(pos[1]-self.acty)**2)<=self.actplateradius**2:
                 #self.star.simulate=True
-                #self.star.setstarttime()
+                self.star.setstarttime()
                 self.activator_hit = 1
                 self.activator_hittime=time.time()
                 #print "activator!!"
-                
 
          #see if we quit.   
         if event.type == pygame.QUIT:
@@ -235,19 +311,26 @@ class App:
         timenow = time.time()
         self.dt = timenow-self.oldtime
         self.oldtime = timenow
-        
+
         #check to see if activator is hit/down
         if self.activator_hit is 1 and self.activator_down is 0:
             if (timenow-self.activator_hittime)>=self.activator_delay:
                 self.activator_down = 1
                 self.star.simulate=True
                 self.star.setstarttime()
-        
+
+
         #print self.dt
         #set the current time step
         self.star.dt = self.dt
-        #update the star dynamics.
-        self.star.updateDynamics(self.dt) #this will automatically star the sim once we set mass 4 to 0.
+        #updae the star dynamics.
+        if self.staticmode==False:
+            self.star.updateDynamics(self.dt) #this will automatically star the sim once we set mass 4 to 0.
+        else:
+            t1,t1d,t2,t2d = self.star.t1,self.star.t1d,self.star.t2,self.star.t2d
+            self.star.updateDynamics(self.dt)
+            self.star.t1,self.star.t1d,self.star.t2,self.star.t2d = t1,t1d,t2,t2d
+
         #now update buffers for t1, t2 so that the cv system can use old angles to check hits.
         self.t1buf = append(self.t1buf[1:],self.star.t1)
         self.t2buf = append(self.t2buf[1:],self.star.t2)
@@ -258,10 +341,13 @@ class App:
         self.draw_star()
         #draw the reset button
         if self.lasershotnow==True:
-            pass
-            #pygame.draw.circle(self._display_surf, green, (int(self.shotx),int(self.shoty)), self.plateradius, 5)
+            if self.star.simulate==True:
+                    self.f.write(str(self.star.simtime)+'\t'+str(self.star.t1)+'\t'+str(self.star.t1d)+'\t'+str(self.star.t2)+'\t'+str(self.star.t2d)+'\t'+str(self.xst)+'\t'+str(self.yst)+'\t'+str(self.x1)+'\t'+str(self.y1)+'\t'+str(self.x2)+'\t'+str(self.y2)+'\t'+str(self.x3)+'\t'+str(self.y3)+'\t'+str(self.x4)+'\t'+str(self.y4)+'\t'+str(self.x5)+'\t'+str(self.y5)+'\t'+str(1)+'\t'+str(self.lastshottime-self.lagtime)+'\t'+str(self.targhit)+'\t'+str(self.targtried)+'\t'+str(self.mindist*self.starscale)+'\t'+str(self.shotx)+'\t'+str(self.shoty)+'\n')
+        else:
+            if self.star.simulate==True:
+                    self.f.write(str(self.star.simtime)+'\t'+str(self.star.t1)+'\t'+str(self.star.t1d)+'\t'+str(self.star.t2)+'\t'+str(self.star.t2d)+'\t'+str(self.xst)+'\t'+str(self.yst)+'\t'+str(self.x1)+'\t'+str(self.y1)+'\t'+str(self.x2)+'\t'+str(self.y2)+'\t'+str(self.x3)+'\t'+str(self.y3)+'\t'+str(self.x4)+'\t'+str(self.y4)+'\t'+str(self.x5)+'\t'+str(self.y5)+'\t'+str(0)+'\t'+str(self.lastshottime-self.lagtime)+'\t'+str(self.targhit)+'\t'+str(self.targtried)+'\t'+str(self.mindist*self.starscale)+'\t'+str(self.shotx)+'\t'+str(self.shoty)+'\n')
 
-        #draw the activator popper
+         #draw the activator popper
         if self.activator_hit is not 1:
             pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty), self.actplateradius, 0)
             pygame.draw.rect(self._display_surf, grey, (self.actx-int(self.actplateradius/2),self.acty-2*self.actplateradius,self.actplateradius,self.actplateradius*6.0), 0)
@@ -271,7 +357,15 @@ class App:
         #pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-self.actplateradius), int(self.actplateradius/2.0), 0)
         
         
+            #pygame.draw.circle(self._display_surf, green, (int(self.shotx),int(self.shoty)), self.plateradius, 5)
+
         pygame.draw.circle(self._display_surf, grey, (self.resetx,self.resety), self.plateradius, 0)
+        
+        pygame.draw.circle(self._display_surf, white, (0,0), 10, 0)
+        pygame.draw.circle(self._display_surf, white, (self.width,0), 10, 0)
+        pygame.draw.circle(self._display_surf, white, (self.width,self.height), 10, 0)
+        pygame.draw.circle(self._display_surf, white, (0,self.height), 10, 0)
+
         #now draw text for reset and time
         textreset = myfont.render('RESET',False,grey)
         self._display_surf.blit(textreset,(75,450))
@@ -279,6 +373,8 @@ class App:
         self._display_surf.blit(texttime,(200,50))
         texttime = myfont.render('thresh: '+str(self.threshval),False,grey)
         self._display_surf.blit(texttime,(600,50))
+
+
         time.sleep(0.01)
 
         
