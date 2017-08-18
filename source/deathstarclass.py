@@ -232,12 +232,12 @@ class DeathStar:
                 self.m2=self.shotweight
                 targhit = 2
 
-        if (d3sq<=spread*spread*2*self.radius*self.radius):
+        if (d3sq<=spread*spread*self.radius*self.radius):
          if(self.m3>self.shotweight):
             self.m3=self.shotweight
             targhit=3
 
-        if (d4sq<=spread*spread*2*self.radius*self.radius):
+        if (d4sq<=spread*spread*self.radius*self.radius):
             if(self.m4>self.shotweight):
                 self.m4=self.shotweight
                 if self.simulate is not True:
@@ -285,12 +285,12 @@ class DeathStar:
                 self.m2=self.shotweight
                 targhit = 2
 
-        if (d3sq<=spread*spread*2*self.radius*self.radius):
+        if (d3sq<=spread*spread*self.radius*self.radius):
          if(self.m3>self.shotweight):
             self.m3=self.shotweight
             targhit=3
 
-        if (d4sq<=spread*spread*2*self.radius*self.radius):
+        if (d4sq<=spread*spread*self.radius*self.radius):
             if(self.m4>self.shotweight):
                 self.m4=self.shotweight
                 self.simulate=True
