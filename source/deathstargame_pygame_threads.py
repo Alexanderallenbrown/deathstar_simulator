@@ -7,7 +7,6 @@ import cv2
 import time
 import thread
 
-#hi. this is a comment.
 
 capture = cv2.VideoCapture(0)
 laserlocx,laserlocy = array([0]),array([0])
@@ -46,7 +45,7 @@ def procvid(app):
 
                 #pygame.draw.circle(app._display_surf, green, (int(shotx),int(shoty)), app.plateradius, 5)
                 #the star has a built-in hit checker. def checkHit(xp, yp,spread,height=500,width=500):
-                app.lastshottime,targhit,j1,j2 = app.star.checkHit_delayed(shotxs,shotys,2,app.t1buf[0],app.t2buf[0],app.height,app.width)
+                app.lastshottime,targhit,j1,j2 = app.star.checkHit_delayed(shotxs,shotys,1,app.t1buf[0],app.t2buf[0],app.height,app.width)
                 #print app.lastshottime,targhit
                 if ((meanx*app.scalex-app.resetx)**2+(meany*app.scaley-app.resety)**2)<=app.plateradius**2:
                     app.star.reset(t2=0.5)
@@ -267,7 +266,11 @@ class App:
             pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty), self.actplateradius, 0)
             pygame.draw.rect(self._display_surf, grey, (self.actx-int(self.actplateradius/2),self.acty-2*self.actplateradius,self.actplateradius,self.actplateradius*6.0), 0)
             pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-2*self.actplateradius), int(self.actplateradius/2.), 0)
-        #pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty,self.actplateradius,self.actplateradius*3.0), 0)
+            p1=(self.width-self.actx,self.height-self.acty)
+            L=20
+            p2=(p1[0]-L*sin(pi/6.), p1[1]+L*cos(pi/6.))
+            p3=(p1[0]+L*sin(pi/6.),p1[1]+L*cos(pi/6.)) 
+            pygame.draw.polygon(self._display_surf,white,[p1,p2,p3])       #pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty,self.actplateradius,self.actplateradius*3.0), 0)
         #pygame.draw.rect(self._display_surf, grey, (self.actx-self.actplateradius*.4,self.acty-self.actplateradius,self.actplateradius*1.5,self.actplateradius*3.0), 0)
         #pygame.draw.circle(self._display_surf, grey, (self.actx,self.acty-self.actplateradius), int(self.actplateradius/2.0), 0)
         
